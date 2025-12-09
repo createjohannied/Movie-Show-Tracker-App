@@ -53,11 +53,22 @@ router.post("/setup-db", async (req, res) => {
         year VARCHAR(10),
         poster_url TEXT,
         type VARCHAR(50),
+        rating INTEGER CHECK (rating >= 0 AND rating <= 5),
+        notes TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
     `;
     
     await pool.query(createTableQuery);
+    
+    // Add rating and notes columns if they don't exist (for existing tables)
+    try {
+      await pool.query("ALTER TABLE favorites ADD COLUMN IF NOT EXISTS rating INTEGER CHECK (rating >= 0 AND rating <= 5)");
+      await pool.query("ALTER TABLE favorites ADD COLUMN IF NOT EXISTS notes TEXT");
+    } catch (alterErr) {
+      // Columns might already exist, ignore
+    }
+    
     res.json({ 
       success: true, 
       message: "Favorites table created successfully!" 
@@ -73,13 +84,13 @@ router.post("/setup-db", async (req, res) => {
 
 // Save a favorite movie/show
 router.post("/favorites", async (req, res) => {
-  const { title, year, poster_url, type } = req.body;
+  const { title, year, poster_url, type, rating, notes } = req.body;
   if (!title) return res.status(400).json({ error: "Title is required" });
 
   try {
     const result = await pool.query(
-      "INSERT INTO favorites (title, year, poster_url, type) VALUES ($1, $2, $3, $4) RETURNING *",
-      [title, year, poster_url, type]
+      "INSERT INTO favorites (title, year, poster_url, type, rating, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [title, year, poster_url, type, rating || null, notes || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -101,9 +112,7 @@ router.get("/favorites", async (req, res) => {
 // Update a favorite by ID
 router.put("/favorites/:id", async (req, res) => {
   const { id } = req.params;
-  const { title, year, poster_url, type } = req.body;
-
-  if (!title) return res.status(400).json({ error: "Title is required" });
+  const { rating, notes } = req.body;
 
   try {
     // Check if the favorite exists
@@ -112,10 +121,10 @@ router.put("/favorites/:id", async (req, res) => {
       return res.status(404).json({ error: "Favorite not found" });
     }
 
-    // Update the favorite
+    // Update the favorite (only rating and notes can be updated)
     const result = await pool.query(
-      "UPDATE favorites SET title = $1, year = $2, poster_url = $3, type = $4 WHERE id = $5 RETURNING *",
-      [title, year, poster_url, type, id]
+      "UPDATE favorites SET rating = $1, notes = $2 WHERE id = $3 RETURNING *",
+      [rating !== undefined ? rating : null, notes || null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {

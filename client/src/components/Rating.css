@@ -1,0 +1,46 @@
+.rating-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: #ddd;
+  cursor: default;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.star.filled {
+  color: #ffc107;
+  text-shadow: 0 0 4px rgba(255, 193, 7, 0.5);
+}
+
+.star.editable {
+  cursor: pointer;
+}
+
+.star.editable:hover {
+  transform: scale(1.2);
+  color: #ffc107;
+}
+
+.rating-text {
+  margin-left: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .star {
+    font-size: 1.2rem;
+  }
+  
+  .rating-text {
+    font-size: 0.8rem;
+  }
+}
+
