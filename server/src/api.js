@@ -98,4 +98,54 @@ router.get("/favorites", async (req, res) => {
   }
 });
 
+// Update a favorite by ID
+router.put("/favorites/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, year, poster_url, type } = req.body;
+
+  if (!title) return res.status(400).json({ error: "Title is required" });
+
+  try {
+    // Check if the favorite exists
+    const checkResult = await pool.query("SELECT * FROM favorites WHERE id = $1", [id]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: "Favorite not found" });
+    }
+
+    // Update the favorite
+    const result = await pool.query(
+      "UPDATE favorites SET title = $1, year = $2, poster_url = $3, type = $4 WHERE id = $5 RETURNING *",
+      [title, year, poster_url, type, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update favorite", details: err.message });
+  }
+});
+
+// Delete a favorite by ID
+router.delete("/favorites/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if the favorite exists
+    const checkResult = await pool.query("SELECT * FROM favorites WHERE id = $1", [id]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: "Favorite not found" });
+    }
+
+    // Delete the favorite
+    await pool.query("DELETE FROM favorites WHERE id = $1", [id]);
+    res.json({ 
+      success: true, 
+      message: "Favorite deleted successfully",
+      deleted: checkResult.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete favorite", details: err.message });
+  }
+});
+
 export default router;
