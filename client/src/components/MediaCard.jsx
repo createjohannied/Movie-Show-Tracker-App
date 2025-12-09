@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
-import Rating from "./Rating";
 import "./MediaCard.css";
 
 function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDelete }) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [rating, setRating] = useState(movie.rating || 0);
-  const [notes, setNotes] = useState(movie.notes || "");
+  const [notes, setNotes] = useState(movie?.notes || "");
 
   // Update local state when movie prop changes
   useEffect(() => {
-    setRating(movie.rating || 0);
-    setNotes(movie.notes || "");
+    if (movie) {
+      setNotes(movie.notes || "");
+    }
   }, [movie]);
+
+  // Safety check: if movie is missing, don't render
+  if (!movie || !movie.title) {
+    return null;
+  }
+
 
   const handleSaveToFavorites = async () => {
     try {
@@ -25,7 +30,6 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
           year: movie.year,
           poster_url: movie.poster_url,
           type: movie.type,
-          rating: rating || null,
           notes: notes || null,
         }),
       });
@@ -72,32 +76,55 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
   };
 
   const handleUpdate = async () => {
+    if (!movie.id) {
+      alert("Error: Movie ID is missing");
+      return;
+    }
+
     try {
+      const updateData = {
+        title: movie.title,
+        notes: notes ? notes.trim() : null,
+      };
+
+      console.log("Sending update with data:", updateData);
+
       const res = await fetch(`http://localhost:4000/api/favorites/${movie.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          rating: rating || null,
-          notes: notes || null,
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (res.ok) {
-        const data = await res.json();
-        alert("Updated successfully!");
-        setIsUpdating(false);
+        const updatedData = await res.json();
+        console.log("Update response from server:", updatedData);
+        
+        // Update local state with the response data immediately
+        setNotes(updatedData.notes || "");
+        
+        // Refresh the favorites list to sync with server
         if (onFavoriteUpdate) {
-          onFavoriteUpdate();
+          try {
+            await onFavoriteUpdate();
+          } catch (refreshErr) {
+            console.error("Failed to refresh favorites:", refreshErr);
+          }
         }
+        // Close edit mode after data is refreshed
+        setIsUpdating(false);
+        alert("Updated successfully!");
       } else {
-        const error = await res.json();
-        alert(`Failed to update: ${error.error}`);
+        const error = await res.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Update failed with error:", error);
+        alert(`Failed to update: ${error.error || "Unknown error"}`);
+        // Keep edit mode open if update failed
       }
     } catch (err) {
       console.error("Update failed:", err);
-      alert("Failed to update favorite");
+      alert(`Failed to update favorite: ${err.message}`);
+      // Keep edit mode open if update failed
     }
   };
 
@@ -105,43 +132,49 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
     <div className={`media-card ${isFavorite ? "favorite-card" : ""}`}>
       {isUpdating ? (
         <div className="update-form">
-          <h3 className="card-title">{movie.title}</h3>
-          <p className="card-year">{movie.year}</p>
-          
-          <div className="form-group">
-            <label>Rating</label>
-            <Rating 
-              rating={rating} 
-              onRatingChange={setRating}
-              editable={true}
-            />
+          <div className="card-poster">
+            {movie.poster_url && movie.poster_url !== "N/A" && movie.poster_url.trim() !== "" ? (
+              <img src={movie.poster_url} alt={movie.title} />
+            ) : (
+              <div className="poster-placeholder">
+                <span>No Image</span>
+              </div>
+            )}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="notes">Your Thoughts</label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="What did you think of this?"
-              rows="4"
-              className="notes-textarea"
-            />
-          </div>
-          
-          <div className="button-group">
-            <button onClick={handleUpdate} className="btn btn-primary">
-              Save
-            </button>
-            <button onClick={() => setIsUpdating(false)} className="btn btn-secondary">
-              Cancel
-            </button>
+          <div className="card-content">
+            <h3 className="card-title">{movie.title}</h3>
+            <p className="card-year">{movie.year}</p>
+            {movie.type && (
+              <span className="card-type">{movie.type}</span>
+            )}
+            
+            <div className="form-group">
+              <label htmlFor="notes">Your Thoughts</label>
+              <textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="What did you think of this?"
+                rows="4"
+                className="notes-textarea"
+              />
+            </div>
+            
+            <div className="button-group">
+              <button onClick={handleUpdate} className="btn btn-primary">
+                Save
+              </button>
+              <button onClick={() => setIsUpdating(false)} className="btn btn-secondary">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ) : (
         <>
           <div className="card-poster">
-            {movie.poster_url && movie.poster_url !== "N/A" ? (
+            {movie.poster_url && movie.poster_url !== "N/A" && movie.poster_url.trim() !== "" ? (
               <img src={movie.poster_url} alt={movie.title} />
             ) : (
               <div className="poster-placeholder">
@@ -159,11 +192,6 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
             
             {isFavorite && (
               <div className="favorite-details">
-                {movie.rating > 0 && (
-                  <div className="rating-display">
-                    <Rating rating={movie.rating} editable={false} />
-                  </div>
-                )}
                 {movie.notes && (
                   <div className="notes-display">
                     <p className="notes-label">Your Thoughts:</p>
@@ -181,7 +209,7 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
               ) : (
                 <>
                   <button onClick={() => setIsUpdating(true)} className="btn btn-primary">
-                    Edit Rating & Notes
+                    Edit Notes
                   </button>
                   <button onClick={handleDelete} className="btn btn-danger">
                     Delete

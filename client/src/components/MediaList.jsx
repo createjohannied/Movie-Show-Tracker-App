@@ -1,8 +1,9 @@
 import React from "react";
 import MediaCard from "./MediaCard";
+import FilterBar from "./FilterBar";
 import "./MediaList.css";
 
-function MediaList({ movies, isFavorite = false, onFavoriteUpdate, onFavoriteDelete }) {
+function MediaList({ movies, isFavorite = false, onFavoriteUpdate, onFavoriteDelete, filters, onFilterChange }) {
   const title = isFavorite ? "My Favorites" : "Search Results";
 
   return (
@@ -14,10 +15,18 @@ function MediaList({ movies, isFavorite = false, onFavoriteUpdate, onFavoriteDel
         )}
       </div>
       
+      {isFavorite && filters && onFilterChange && (
+        <FilterBar filters={filters} onFilterChange={onFilterChange} />
+      )}
+      
       {movies.length === 0 ? (
         <div className="empty-state">
           <p className="empty-message">
-            {isFavorite ? "No favorites yet. Save some movies or shows to get started!" : "No results yet. Search for a movie or show!"}
+            {isFavorite 
+              ? (filters && (filters.type !== null || filters.year !== null)
+                  ? "No favorites match your filters. Try adjusting your filter criteria!"
+                  : "No favorites yet. Save some movies or shows to get started!")
+              : "No results yet. Search for a movie or show!"}
           </p>
         </div>
       ) : (

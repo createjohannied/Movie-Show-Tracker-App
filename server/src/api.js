@@ -112,7 +112,12 @@ router.get("/favorites", async (req, res) => {
 // Update a favorite by ID
 router.put("/favorites/:id", async (req, res) => {
   const { id } = req.params;
-  const { rating, notes } = req.body;
+  const { title, notes } = req.body;
+
+  // Validate that title is provided (required field)
+  if (!title) {
+    return res.status(400).json({ error: "Title is required" });
+  }
 
   try {
     // Check if the favorite exists
@@ -121,11 +126,15 @@ router.put("/favorites/:id", async (req, res) => {
       return res.status(404).json({ error: "Favorite not found" });
     }
 
-    // Update the favorite (only rating and notes can be updated)
+    // Update the favorite (only notes can be updated, title is validated but not changed)
+    console.log("Updating favorite:", { id, notes: notes || null });
+    
     const result = await pool.query(
-      "UPDATE favorites SET rating = $1, notes = $2 WHERE id = $3 RETURNING *",
-      [rating !== undefined ? rating : null, notes || null, id]
+      "UPDATE favorites SET notes = $1 WHERE id = $2 RETURNING *",
+      [notes || null, id]
     );
+    
+    console.log("Update result:", result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
