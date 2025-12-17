@@ -34,19 +34,46 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
         }),
       });
 
+      // Get response text first to see what we're dealing with
+      const responseText = await res.text();
+      console.log("Response status:", res.status);
+      console.log("Response text:", responseText);
+
       if (res.ok) {
-        const data = await res.json();
-        alert("Added to watchlist!");
-        if (onWatchlistUpdate) {
-          onWatchlistUpdate();
+        try {
+          const data = JSON.parse(responseText);
+          alert("Added to watchlist!");
+          if (onWatchlistUpdate) {
+            onWatchlistUpdate();
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse success response:", parseErr);
+          alert("Added to watchlist (but couldn't parse response)");
+          if (onWatchlistUpdate) {
+            onWatchlistUpdate();
+          }
         }
       } else {
-        const error = await res.json();
-        alert(`Failed to add: ${error.error}`);
+        // Try to parse as JSON, but handle non-JSON responses
+        let error;
+        try {
+          error = JSON.parse(responseText);
+        } catch (parseErr) {
+          error = { 
+            error: `Server error (${res.status})`, 
+            details: responseText || "Could not parse error response" 
+          };
+        }
+        
+        console.error("Server error:", error);
+        const errorMessage = error.details 
+          ? `Failed to add: ${error.error}\nDetails: ${error.details}` 
+          : `Failed to add: ${error.error || "Unknown error"}`;
+        alert(errorMessage);
       }
     } catch (err) {
       console.error("Add failed:", err);
-      alert("Failed to add to watchlist");
+      alert(`Failed to add to watchlist: ${err.message || "Network error - is the server running?"}`);
     }
   };
 

@@ -88,12 +88,36 @@ router.post("/watchlist", async (req, res) => {
   if (!title) return res.status(400).json({ error: "Title is required" });
 
   try {
+    // Check if watchlist table exists, if not create it automatically
+    const tableCheck = await pool.query(
+      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'watchlist')"
+    );
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log("Watchlist table not found, creating it...");
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS watchlist (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          year VARCHAR(10),
+          poster_url TEXT,
+          type VARCHAR(50),
+          rating INTEGER CHECK (rating >= 0 AND rating <= 5),
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `;
+      await pool.query(createTableQuery);
+      console.log("Watchlist table created successfully");
+    }
+
     const result = await pool.query(
       "INSERT INTO watchlist (title, year, poster_url, type, rating, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [title, year, poster_url, type, rating || null, notes || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
+    console.error("Error adding to watchlist:", err);
     res.status(500).json({ error: "Failed to add to watchlist", details: err.message });
   }
 });
