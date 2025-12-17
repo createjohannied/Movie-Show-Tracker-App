@@ -214,7 +214,7 @@
   margin-top: 1.5rem;
 }
 
-/* Responsive Design */
+
 @media (min-width: 768px) {
   .media-card {
     max-width: 350px;
