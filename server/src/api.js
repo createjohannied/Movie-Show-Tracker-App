@@ -43,11 +43,11 @@ router.get("/test-db", async (req, res) => {
   }
 });
 
-// Create the favorites table (run this once to set up the database)
+// Create the watchlist table (run this once to set up the database)
 router.post("/setup-db", async (req, res) => {
   try {
     const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS favorites (
+      CREATE TABLE IF NOT EXISTS watchlist (
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         year VARCHAR(10),
@@ -63,15 +63,15 @@ router.post("/setup-db", async (req, res) => {
     
     // Add rating and notes columns if they don't exist (for existing tables)
     try {
-      await pool.query("ALTER TABLE favorites ADD COLUMN IF NOT EXISTS rating INTEGER CHECK (rating >= 0 AND rating <= 5)");
-      await pool.query("ALTER TABLE favorites ADD COLUMN IF NOT EXISTS notes TEXT");
+      await pool.query("ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS rating INTEGER CHECK (rating >= 0 AND rating <= 5)");
+      await pool.query("ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS notes TEXT");
     } catch (alterErr) {
       // Columns might already exist, ignore
     }
     
     res.json({ 
       success: true, 
-      message: "Favorites table created successfully!" 
+      message: "Watchlist table created successfully!" 
     });
   } catch (err) {
     res.status(500).json({ 
@@ -82,35 +82,35 @@ router.post("/setup-db", async (req, res) => {
   }
 });
 
-// Save a favorite movie/show
-router.post("/favorites", async (req, res) => {
+// Add a movie/show to watchlist
+router.post("/watchlist", async (req, res) => {
   const { title, year, poster_url, type, rating, notes } = req.body;
   if (!title) return res.status(400).json({ error: "Title is required" });
 
   try {
     const result = await pool.query(
-      "INSERT INTO favorites (title, year, poster_url, type, rating, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      "INSERT INTO watchlist (title, year, poster_url, type, rating, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [title, year, poster_url, type, rating || null, notes || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: "Failed to save favorite", details: err.message });
+    res.status(500).json({ error: "Failed to add to watchlist", details: err.message });
   }
 });
 
-// Get all favorites
-router.get("/favorites", async (req, res) => {
+// Get all watchlist items
+router.get("/watchlist", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM favorites ORDER BY created_at DESC");
+    const result = await pool.query("SELECT * FROM watchlist ORDER BY created_at DESC");
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch favorites", details: err.message });
+    res.status(500).json({ error: "Failed to fetch watchlist", details: err.message });
   }
 });
 
-// Update a favorite by ID
-router.put("/favorites/:id", async (req, res) => {
+// Update a watchlist item by ID
+router.put("/watchlist/:id", async (req, res) => {
   const { id } = req.params;
   const { title, notes } = req.body;
 
@@ -120,17 +120,17 @@ router.put("/favorites/:id", async (req, res) => {
   }
 
   try {
-    // Check if the favorite exists
-    const checkResult = await pool.query("SELECT * FROM favorites WHERE id = $1", [id]);
+    // Check if the watchlist item exists
+    const checkResult = await pool.query("SELECT * FROM watchlist WHERE id = $1", [id]);
     if (checkResult.rows.length === 0) {
-      return res.status(404).json({ error: "Favorite not found" });
+      return res.status(404).json({ error: "Watchlist item not found" });
     }
 
-    // Update the favorite (only notes can be updated, title is validated but not changed)
-    console.log("Updating favorite:", { id, notes: notes || null });
+    // Update the watchlist item (only notes can be updated, title is validated but not changed)
+    console.log("Updating watchlist item:", { id, notes: notes || null });
     
     const result = await pool.query(
-      "UPDATE favorites SET notes = $1 WHERE id = $2 RETURNING *",
+      "UPDATE watchlist SET notes = $1 WHERE id = $2 RETURNING *",
       [notes || null, id]
     );
     
@@ -138,31 +138,31 @@ router.put("/favorites/:id", async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to update favorite", details: err.message });
+    res.status(500).json({ error: "Failed to update watchlist item", details: err.message });
   }
 });
 
-// Delete a favorite by ID
-router.delete("/favorites/:id", async (req, res) => {
+// Delete a watchlist item by ID
+router.delete("/watchlist/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if the favorite exists
-    const checkResult = await pool.query("SELECT * FROM favorites WHERE id = $1", [id]);
+    // Check if the watchlist item exists
+    const checkResult = await pool.query("SELECT * FROM watchlist WHERE id = $1", [id]);
     if (checkResult.rows.length === 0) {
-      return res.status(404).json({ error: "Favorite not found" });
+      return res.status(404).json({ error: "Watchlist item not found" });
     }
 
-    // Delete the favorite
-    await pool.query("DELETE FROM favorites WHERE id = $1", [id]);
+    // Delete the watchlist item
+    await pool.query("DELETE FROM watchlist WHERE id = $1", [id]);
     res.json({ 
       success: true, 
-      message: "Favorite deleted successfully",
+      message: "Watchlist item deleted successfully",
       deleted: checkResult.rows[0]
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to delete favorite", details: err.message });
+    res.status(500).json({ error: "Failed to delete watchlist item", details: err.message });
   }
 });
 

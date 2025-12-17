@@ -14,8 +14,8 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.favorite-card {
-  border: 2px solid #ffc107;
+.watchlist-card {
+  border: 2px solid #667eea;
 }
 
 .card-poster {
@@ -80,7 +80,7 @@
   text-transform: capitalize;
 }
 
-.favorite-details {
+.watchlist-details {
   margin-top: 0.5rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;

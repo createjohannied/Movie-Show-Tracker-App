@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./MediaCard.css";
 
-function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDelete }) {
+function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistDelete }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [notes, setNotes] = useState(movie?.notes || "");
 
@@ -18,9 +18,9 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
   }
 
 
-  const handleSaveToFavorites = async () => {
+  const handleAddToWatchlist = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/favorites", {
+      const res = await fetch("http://localhost:4000/api/watchlist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,42 +36,42 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
 
       if (res.ok) {
         const data = await res.json();
-        alert("Saved to favorites!");
-        if (onFavoriteUpdate) {
-          onFavoriteUpdate();
+        alert("Added to watchlist!");
+        if (onWatchlistUpdate) {
+          onWatchlistUpdate();
         }
       } else {
         const error = await res.json();
-        alert(`Failed to save: ${error.error}`);
+        alert(`Failed to add: ${error.error}`);
       }
     } catch (err) {
-      console.error("Save failed:", err);
-      alert("Failed to save to favorites");
+      console.error("Add failed:", err);
+      alert("Failed to add to watchlist");
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this favorite?")) {
+    if (!window.confirm("Are you sure you want to remove this from your watchlist?")) {
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/api/favorites/${movie.id}`, {
+      const res = await fetch(`http://localhost:4000/api/watchlist/${movie.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        alert("Deleted successfully!");
-        if (onFavoriteDelete) {
-          onFavoriteDelete();
+        alert("Removed from watchlist!");
+        if (onWatchlistDelete) {
+          onWatchlistDelete();
         }
       } else {
         const error = await res.json();
-        alert(`Failed to delete: ${error.error}`);
+        alert(`Failed to remove: ${error.error}`);
       }
     } catch (err) {
       console.error("Delete failed:", err);
-      alert("Failed to delete favorite");
+      alert("Failed to remove from watchlist");
     }
   };
 
@@ -89,7 +89,7 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
 
       console.log("Sending update with data:", updateData);
 
-      const res = await fetch(`http://localhost:4000/api/favorites/${movie.id}`, {
+      const res = await fetch(`http://localhost:4000/api/watchlist/${movie.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -104,12 +104,12 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
         // Update local state with the response data immediately
         setNotes(updatedData.notes || "");
         
-        // Refresh the favorites list to sync with server
-        if (onFavoriteUpdate) {
+        // Refresh the watchlist to sync with server
+        if (onWatchlistUpdate) {
           try {
-            await onFavoriteUpdate();
+            await onWatchlistUpdate();
           } catch (refreshErr) {
-            console.error("Failed to refresh favorites:", refreshErr);
+            console.error("Failed to refresh watchlist:", refreshErr);
           }
         }
         // Close edit mode after data is refreshed
@@ -123,13 +123,13 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
       }
     } catch (err) {
       console.error("Update failed:", err);
-      alert(`Failed to update favorite: ${err.message}`);
+      alert(`Failed to update watchlist item: ${err.message}`);
       // Keep edit mode open if update failed
     }
   };
 
   return (
-    <div className={`media-card ${isFavorite ? "favorite-card" : ""}`}>
+    <div className={`media-card ${isWatchlist ? "watchlist-card" : ""}`}>
       {isUpdating ? (
         <div className="update-form">
           <div className="card-poster">
@@ -190,11 +190,11 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
               <span className="card-type">{movie.type}</span>
             )}
             
-            {isFavorite && (
-              <div className="favorite-details">
+            {isWatchlist && (
+              <div className="watchlist-details">
                 {movie.notes && (
                   <div className="notes-display">
-                    <p className="notes-label">Your Thoughts:</p>
+                    <p className="notes-label">Your Notes:</p>
                     <p className="notes-text">{movie.notes}</p>
                   </div>
                 )}
@@ -202,9 +202,9 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
             )}
             
             <div className="card-actions">
-              {!isFavorite ? (
-                <button onClick={handleSaveToFavorites} className="btn btn-primary btn-full">
-                  Save to Favorites
+              {!isWatchlist ? (
+                <button onClick={handleAddToWatchlist} className="btn btn-primary btn-full">
+                  Add to Watchlist
                 </button>
               ) : (
                 <>
@@ -212,7 +212,7 @@ function MediaCard({ movie, isFavorite = false, onFavoriteUpdate, onFavoriteDele
                     Edit Notes
                   </button>
                   <button onClick={handleDelete} className="btn btn-danger">
-                    Delete
+                    Remove
                   </button>
                 </>
               )}
