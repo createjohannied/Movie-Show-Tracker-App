@@ -30,33 +30,13 @@ router.post("/watchlist", async (req, res) => {
   if (!title) return res.status(400).json({ error: "Title is required" });
 
   try {
-    const tableCheck = await pool.query(
-      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'watchlist')"
-    );
-    
-    if (!tableCheck.rows[0].exists) {
-      const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS watchlist (
-          id SERIAL PRIMARY KEY,
-          title VARCHAR(255) NOT NULL,
-          year VARCHAR(10),
-          poster_url TEXT,
-          type VARCHAR(50),
-          rating INTEGER CHECK (rating >= 0 AND rating <= 5),
-          notes TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-      `;
-      await pool.query(createTableQuery);
-    }
-
     const result = await pool.query(
       "INSERT INTO watchlist (title, year, poster_url, type, rating, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [title, year, poster_url, type, rating || null, notes || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: "Failed to add to watchlist", details: err.message });
+    res.status(500).json({ error: "Failed to add to watchlist" });
   }
 });
 
@@ -65,7 +45,7 @@ router.get("/watchlist", async (req, res) => {
     const result = await pool.query("SELECT * FROM watchlist ORDER BY created_at DESC");
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch watchlist", details: err.message });
+    res.status(500).json({ error: "Failed to fetch watchlist" });
   }
 });
 
@@ -90,7 +70,7 @@ router.put("/watchlist/:id", async (req, res) => {
     
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update watchlist item", details: err.message });
+    res.status(500).json({ error: "Failed to update watchlist item" });
   }
 });
 
@@ -110,7 +90,7 @@ router.delete("/watchlist/:id", async (req, res) => {
       deleted: checkResult.rows[0]
     });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete watchlist item", details: err.message });
+    res.status(500).json({ error: "Failed to delete watchlist item" });
   }
 });
 

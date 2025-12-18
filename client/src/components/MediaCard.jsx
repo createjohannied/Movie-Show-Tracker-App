@@ -33,39 +33,17 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
         }),
       });
 
-      const responseText = await res.text();
-
       if (res.ok) {
-        try {
-          const data = JSON.parse(responseText);
-          alert("Added to watchlist!");
-          if (onWatchlistUpdate) {
-            onWatchlistUpdate();
-          }
-        } catch (parseErr) {
-          alert("Added to watchlist");
-          if (onWatchlistUpdate) {
-            onWatchlistUpdate();
-          }
+        alert("Added to watchlist!");
+        if (onWatchlistUpdate) {
+          onWatchlistUpdate();
         }
       } else {
-        let error;
-        try {
-          error = JSON.parse(responseText);
-        } catch (parseErr) {
-          error = { 
-            error: `Server error (${res.status})`, 
-            details: responseText || "Could not parse error response" 
-          };
-        }
-        
-        const errorMessage = error.details 
-          ? `Failed to add: ${error.error}\nDetails: ${error.details}` 
-          : `Failed to add: ${error.error || "Unknown error"}`;
-        alert(errorMessage);
+        const error = await res.json();
+        alert(`Failed to add: ${error.error}`);
       }
     } catch (err) {
-      alert(`Failed to add to watchlist: ${err.message || "Network error"}`);
+      alert("Failed to add to watchlist");
     }
   };
 
@@ -116,18 +94,14 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
       if (res.ok) {
         const updatedData = await res.json();
         setNotes(updatedData.notes || "");
-        
         if (onWatchlistUpdate) {
-          try {
-            await onWatchlistUpdate();
-          } catch (refreshErr) {
-          }
+          onWatchlistUpdate();
         }
         setIsUpdating(false);
         alert("Updated successfully!");
       } else {
-        const error = await res.json().catch(() => ({ error: "Unknown error" }));
-        alert(`Failed to update: ${error.error || "Unknown error"}`);
+        const error = await res.json();
+        alert(`Failed to update: ${error.error}`);
       }
     } catch (err) {
       alert(`Failed to update watchlist item: ${err.message}`);
@@ -139,7 +113,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
       {isUpdating ? (
         <div className="update-form">
           <div className="card-poster">
-            {movie.poster_url && movie.poster_url !== "N/A" && movie.poster_url.trim() !== "" ? (
+            {movie.poster_url && movie.poster_url !== "N/A" ? (
               <img src={movie.poster_url} alt={movie.title} />
             ) : (
               <div className="poster-placeholder">
@@ -180,7 +154,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
       ) : (
         <>
           <div className="card-poster">
-            {movie.poster_url && movie.poster_url !== "N/A" && movie.poster_url.trim() !== "" ? (
+            {movie.poster_url && movie.poster_url !== "N/A" ? (
               <img src={movie.poster_url} alt={movie.title} />
             ) : (
               <div className="poster-placeholder">

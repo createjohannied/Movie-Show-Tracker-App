@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import SearchForm from "./components/SearchForm";
 import MediaList from "./components/MediaList";
 import { API_BASE_URL } from "./config";
@@ -23,24 +23,15 @@ function App() {
     fetchWatchlist();
   }, []);
 
-  const filteredWatchlist = useMemo(() => {
-    return watchlist.filter((item) => {
-      if (filters.type !== null) {
-        if (!item.type || item.type.toLowerCase() !== filters.type.toLowerCase()) {
-          return false;
-        }
-      }
-
-      if (filters.year !== null && filters.year !== "") {
-        const itemYear = item.year ? item.year.toString() : "";
-        if (!itemYear.includes(filters.year)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [watchlist, filters]);
+  const filteredWatchlist = watchlist.filter((item) => {
+    if (filters.type !== null && item.type && item.type.toLowerCase() !== filters.type.toLowerCase()) {
+      return false;
+    }
+    if (filters.year !== null && filters.year !== "" && item.year && !item.year.toString().includes(filters.year)) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="App">
