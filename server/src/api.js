@@ -44,7 +44,8 @@ router.get("/test-db", async (req, res) => {
 });
 
 
-router.post("/setup-db", async (req, res) => {
+// Setup database table - works with both GET and POST
+const setupDatabase = async (req, res) => {
   try {
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS watchlist (
@@ -80,7 +81,10 @@ router.post("/setup-db", async (req, res) => {
       details: err.message 
     });
   }
-});
+};
+
+router.get("/setup-db", setupDatabase);
+router.post("/setup-db", setupDatabase);
 
 // add a movie/show to watchlist
 router.post("/watchlist", async (req, res) => {
