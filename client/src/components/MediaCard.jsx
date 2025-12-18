@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./MediaCard.css";
+import { API_BASE_URL } from "../config";
 
 function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistDelete }) {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -20,7 +21,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
 
   const handleAddToWatchlist = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/watchlist", {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +84,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/api/watchlist/${movie.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist/${movie.id}`, {
         method: "DELETE",
       });
 
@@ -116,7 +117,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
 
       console.log("Sending update with data:", updateData);
 
-      const res = await fetch(`http://localhost:4000/api/watchlist/${movie.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist/${movie.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

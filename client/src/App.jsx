@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import SearchForm from "./components/SearchForm";
 import MediaList from "./components/MediaList";
+import { API_BASE_URL } from "./config";
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -9,7 +10,7 @@ function App() {
 
   const fetchWatchlist = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/watchlist");
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`);
       if (res.ok) {
         const data = await res.json();
         console.log("Fetched watchlist:", data);

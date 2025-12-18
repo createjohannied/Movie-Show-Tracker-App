@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./SearchForm.css";
+import { API_BASE_URL } from "../config";
 
 function SearchForm({ setMovies }) {
   const [query, setQuery] = useState("");
@@ -18,7 +19,7 @@ function SearchForm({ setMovies }) {
     setError("");
 
     try {
-      const res = await fetch(`http://localhost:4000/api/search?title=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE_URL}/api/search?title=${encodeURIComponent(query)}`);
       const data = await res.json();
       
       if (res.ok) {
