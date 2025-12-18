@@ -68,3 +68,22 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.app-header {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.app-header h1 {
+  margin-bottom: 0.5rem;
+}
+
+.app-header p {
+  color: #666;
+}
+
+.app-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}

@@ -4,10 +4,10 @@
   gap: 1rem;
   align-items: flex-end;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
 }
 
 .filter-group {
@@ -20,29 +20,25 @@
 
 .filter-group label {
   font-weight: 600;
-  color: white;
+  color: #333;
   font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .filter-select,
 .filter-input {
   padding: 0.75rem 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   background: white;
   font-size: 1rem;
   color: #333;
-  transition: all 0.3s ease;
   font-family: inherit;
 }
 
 .filter-select:focus,
 .filter-input:focus {
   outline: none;
-  border-color: #ffd700;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+  border-color: #333;
 }
 
 .filter-input::placeholder {
@@ -51,22 +47,19 @@
 
 .clear-filters-btn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid white;
-  border-radius: 8px;
-  color: white;
+  background: white;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #333;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
   font-size: 0.9rem;
   white-space: nowrap;
   align-self: flex-end;
 }
 
 .clear-filters-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: #f5f5f5;
 }
 
 @media (max-width: 768px) {

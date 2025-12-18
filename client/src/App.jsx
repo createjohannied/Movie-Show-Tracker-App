@@ -51,7 +51,7 @@ function App() {
   return (
     <div className="App">
       <div className="app-header">
-        <h1>🎬 Movie & Show Tracker</h1>
+        <h1>Movie & Show Tracker</h1>
         <p>Discover and track movies and shows you want to watch</p>
       </div>
       <div className="app-content">
