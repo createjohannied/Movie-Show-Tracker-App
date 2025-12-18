@@ -13,13 +13,9 @@ function App() {
       const res = await fetch(`${API_BASE_URL}/api/watchlist`);
       if (res.ok) {
         const data = await res.json();
-        console.log("Fetched watchlist:", data);
         setWatchlist(data);
-      } else {
-        console.error("Failed to fetch watchlist");
       }
     } catch (err) {
-      console.error("Error fetching watchlist:", err);
     }
   };
 
@@ -27,17 +23,14 @@ function App() {
     fetchWatchlist();
   }, []);
 
-  // Filter watchlist based on current filters
   const filteredWatchlist = useMemo(() => {
     return watchlist.filter((item) => {
-      // Filter by type
       if (filters.type !== null) {
         if (!item.type || item.type.toLowerCase() !== filters.type.toLowerCase()) {
           return false;
         }
       }
 
-      // Filter by year
       if (filters.year !== null && filters.year !== "") {
         const itemYear = item.year ? item.year.toString() : "";
         if (!itemYear.includes(filters.year)) {

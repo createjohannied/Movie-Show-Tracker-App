@@ -15,17 +15,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "Movie & Show Tracker API",
-    endpoints: {
-      search: "/api/search?title=<movie_title>",
-      watchlist: "/api/watchlist",
-      setupDb: "/api/setup-db",
-      testDb: "/api/test-db",
-    },
-  });
-});
 
 app.use("/api", router);
 

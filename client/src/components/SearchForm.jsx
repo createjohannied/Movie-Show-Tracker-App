@@ -30,7 +30,6 @@ function SearchForm({ setMovies }) {
         setMovies([]);
       }
     } catch (err) {
-      console.error("Search failed:", err);
       setError("Failed to search. Please try again.");
       setMovies([]);
     } finally {

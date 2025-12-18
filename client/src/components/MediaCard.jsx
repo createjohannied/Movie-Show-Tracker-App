@@ -6,14 +6,12 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
   const [isUpdating, setIsUpdating] = useState(false);
   const [notes, setNotes] = useState(movie?.notes || "");
 
-  // Update local state when movie prop changes
   useEffect(() => {
     if (movie) {
       setNotes(movie.notes || "");
     }
   }, [movie]);
 
-  // Safety check: if movie is missing, don't render
   if (!movie || !movie.title) {
     return null;
   }
@@ -35,10 +33,7 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
         }),
       });
 
-      // Get response text first to see what we're dealing with
       const responseText = await res.text();
-      console.log("Response status:", res.status);
-      console.log("Response text:", responseText);
 
       if (res.ok) {
         try {
@@ -48,14 +43,12 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
             onWatchlistUpdate();
           }
         } catch (parseErr) {
-          console.error("Failed to parse success response:", parseErr);
-          alert("Added to watchlist (but couldn't parse response)");
+          alert("Added to watchlist");
           if (onWatchlistUpdate) {
             onWatchlistUpdate();
           }
         }
       } else {
-        // Try to parse as JSON, but handle non-JSON responses
         let error;
         try {
           error = JSON.parse(responseText);
@@ -66,15 +59,13 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
           };
         }
         
-        console.error("Server error:", error);
         const errorMessage = error.details 
           ? `Failed to add: ${error.error}\nDetails: ${error.details}` 
           : `Failed to add: ${error.error || "Unknown error"}`;
         alert(errorMessage);
       }
     } catch (err) {
-      console.error("Add failed:", err);
-      alert(`Failed to add to watchlist: ${err.message || "Network error - is the server running?"}`);
+      alert(`Failed to add to watchlist: ${err.message || "Network error"}`);
     }
   };
 
@@ -98,7 +89,6 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
         alert(`Failed to remove: ${error.error}`);
       }
     } catch (err) {
-      console.error("Delete failed:", err);
       alert("Failed to remove from watchlist");
     }
   };
@@ -115,8 +105,6 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
         notes: notes ? notes.trim() : null,
       };
 
-      console.log("Sending update with data:", updateData);
-
       const res = await fetch(`${API_BASE_URL}/api/watchlist/${movie.id}`, {
         method: "PUT",
         headers: {
@@ -127,32 +115,22 @@ function MediaCard({ movie, isWatchlist = false, onWatchlistUpdate, onWatchlistD
 
       if (res.ok) {
         const updatedData = await res.json();
-        console.log("Update response from server:", updatedData);
-        
-        // Update local state with the response data immediately
         setNotes(updatedData.notes || "");
         
-        // Refresh the watchlist to sync with server
         if (onWatchlistUpdate) {
           try {
             await onWatchlistUpdate();
           } catch (refreshErr) {
-            console.error("Failed to refresh watchlist:", refreshErr);
           }
         }
-        // Close edit mode after data is refreshed
         setIsUpdating(false);
         alert("Updated successfully!");
       } else {
         const error = await res.json().catch(() => ({ error: "Unknown error" }));
-        console.error("Update failed with error:", error);
         alert(`Failed to update: ${error.error || "Unknown error"}`);
-        // Keep edit mode open if update failed
       }
     } catch (err) {
-      console.error("Update failed:", err);
       alert(`Failed to update watchlist item: ${err.message}`);
-      // Keep edit mode open if update failed
     }
   };
 

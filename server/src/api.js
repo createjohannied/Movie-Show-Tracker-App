@@ -25,80 +25,16 @@ router.get("/search", async (req, res) => {
   }
 });
 
-// Test database connection
-router.get("/test-db", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    res.json({ 
-      success: true, 
-      message: "Database connected!",
-      timestamp: result.rows[0].now 
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Database connection failed",
-      details: err.message 
-    });
-  }
-});
-
-
-// Setup database table - works with both GET and POST
-const setupDatabase = async (req, res) => {
-  try {
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS watchlist (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        year VARCHAR(10),
-        poster_url TEXT,
-        type VARCHAR(50),
-        rating INTEGER CHECK (rating >= 0 AND rating <= 5),
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `;
-    
-    await pool.query(createTableQuery);
-    
-   
-    try {
-      await pool.query("ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS rating INTEGER CHECK (rating >= 0 AND rating <= 5)");
-      await pool.query("ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS notes TEXT");
-    } catch (alterErr) {
- 
-    }
-    
-    res.json({ 
-      success: true, 
-      message: "Watchlist table created successfully!" 
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to create table",
-      details: err.message 
-    });
-  }
-};
-
-router.get("/setup-db", setupDatabase);
-router.post("/setup-db", setupDatabase);
-
-// add a movie/show to watchlist
 router.post("/watchlist", async (req, res) => {
   const { title, year, poster_url, type, rating, notes } = req.body;
   if (!title) return res.status(400).json({ error: "Title is required" });
 
   try {
-    // check if watchlist table exist then  create it automatically
     const tableCheck = await pool.query(
       "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'watchlist')"
     );
     
     if (!tableCheck.rows[0].exists) {
-      console.log("Watchlist table not found, creating it...");
       const createTableQuery = `
         CREATE TABLE IF NOT EXISTS watchlist (
           id SERIAL PRIMARY KEY,
@@ -112,7 +48,6 @@ router.post("/watchlist", async (req, res) => {
         );
       `;
       await pool.query(createTableQuery);
-      console.log("Watchlist table created successfully");
     }
 
     const result = await pool.query(
@@ -121,67 +56,53 @@ router.post("/watchlist", async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Error adding to watchlist:", err);
     res.status(500).json({ error: "Failed to add to watchlist", details: err.message });
   }
 });
 
-// get all watchlist items
 router.get("/watchlist", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM watchlist ORDER BY created_at DESC");
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to fetch watchlist", details: err.message });
   }
 });
 
-// update a watchlist item by ID
 router.put("/watchlist/:id", async (req, res) => {
   const { id } = req.params;
   const { title, notes } = req.body;
 
-  
   if (!title) {
     return res.status(400).json({ error: "Title is required" });
   }
 
   try {
-    // check if the  item exists
     const checkResult = await pool.query("SELECT * FROM watchlist WHERE id = $1", [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: "Watchlist item not found" });
     }
 
-
-    console.log("Updating watchlist item:", { id, notes: notes || null });
-    
     const result = await pool.query(
       "UPDATE watchlist SET notes = $1 WHERE id = $2 RETURNING *",
       [notes || null, id]
     );
     
-    console.log("Update result:", result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to update watchlist item", details: err.message });
   }
 });
 
-// delte a watchlist item by ID
 router.delete("/watchlist/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    // check if the watchlist item exists
     const checkResult = await pool.query("SELECT * FROM watchlist WHERE id = $1", [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: "Watchlist item not found" });
     }
 
-    // delete the watchlist item
     await pool.query("DELETE FROM watchlist WHERE id = $1", [id]);
     res.json({ 
       success: true, 
@@ -189,7 +110,6 @@ router.delete("/watchlist/:id", async (req, res) => {
       deleted: checkResult.rows[0]
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to delete watchlist item", details: err.message });
   }
 });
